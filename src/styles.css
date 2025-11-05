@@ -1,0 +1,77 @@
+:root {
+    /* Game layout */
+    --cell-size: 2rem;
+    --cols: 10;
+    /* MD3 color tokens (light) */
+    --md-sys-color-primary: #6750A4;
+    --md-sys-color-on-primary: #FFFFFF;
+    --md-sys-color-surface: #FFFBFE;
+    --md-sys-color-on-surface: #1C1B1F;
+    --md-sys-color-surface-variant: #E7E0EC;
+    --md-sys-color-on-surface-variant: #49454F;
+    --md-sys-color-outline: #79747E;
+    --md-sys-color-error: #B3261E;
+    --md-sys-color-on-error: #FFFFFF;
+    --md-sys-elevation-1: 0 1px 2px rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.15);
+    --md-sys-elevation-2: 0 2px 6px rgba(0,0,0,0.3), 0 2px 4px 1px rgba(0,0,0,0.18);
+    --md-sys-elevation-3: 0 4px 8px rgba(0,0,0,0.28), 0 4px 6px 2px rgba(0,0,0,0.18);
+    --md-sys-shape-medium: 12px;
+    --md-state-hover: 0.08;
+    --md-state-focus: 0.12;
+    --md-state-pressed: 0.12;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --md-sys-color-primary: #D0BCFF;
+        --md-sys-color-on-primary: #381E72;
+        --md-sys-color-surface: #1C1B1F;
+        --md-sys-color-on-surface: #E6E1E5;
+        --md-sys-color-surface-variant: #49454F;
+        --md-sys-color-on-surface-variant: #CAC4D0;
+        --md-sys-color-outline: #938F99;
+        --md-sys-color-error: #F2B8B5;
+        --md-sys-color-on-error: #601410;
+    }
+}
+* { margin:0; padding:0; box-sizing:border-box }
+html,body { height:100% }
+body { font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface) }
+
+/* MD3 surface/panel */
+.panel { background: var(--md-sys-color-surface); padding:2rem; border-radius: var(--md-sys-shape-medium); box-shadow: var(--md-sys-elevation-2); text-align:center }
+.md3-surface { background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface) }
+.md3-elevation-1 { box-shadow: var(--md-sys-elevation-1) }
+.md3-elevation-2 { box-shadow: var(--md-sys-elevation-2) }
+.md3-elevation-3 { box-shadow: var(--md-sys-elevation-3) }
+
+#controls { display:flex; gap:0.75rem; align-items:center; justify-content:center; margin-bottom:1rem }
+
+/* MD3 Filled Button */
+.md3-button { position: relative; display:inline-flex; align-items:center; justify-content:center; height:40px; padding:0 24px; border-radius: 20px; border:none; cursor:pointer; font-weight:600; font-size:14px; line-height:20px; letter-spacing:0.1px; transition: box-shadow 120ms ease, transform 120ms ease }
+.md3-button--filled { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary) }
+.md3-button .state-layer { position:absolute; inset:0; border-radius:inherit; background: currentColor; opacity:0; pointer-events:none; transition: opacity 120ms ease }
+.md3-button:hover .state-layer { opacity: var(--md-state-hover) }
+.md3-button:active .state-layer { opacity: var(--md-state-pressed) }
+.md3-button:focus-visible { outline: 2px solid color-mix(in oklab, var(--md-sys-color-primary) 60%, transparent); outline-offset: 2px }
+
+/* Board */
+#board { display:grid; grid-template-columns: repeat(var(--cols), var(--cell-size)); gap:0.25rem; user-select:none }
+
+/* Cells (use surface-variant + outline for unrevealed, surface for revealed) */
+.cell { width:var(--cell-size); height:var(--cell-size); border-radius: 8px; display:flex; align-items:center; justify-content:center; font-weight:600; cursor:pointer; background: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); border: 1px solid var(--md-sys-color-outline); transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease, filter 120ms ease }
+.cell.revealed { background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); border-color: transparent; cursor:default }
+.cell.mine { background: color-mix(in oklab, var(--md-sys-color-error) 15%, transparent); color: var(--md-sys-color-error) }
+.cell.flag { background: color-mix(in oklab, var(--md-sys-color-primary) 18%, transparent); color: var(--md-sys-color-on-surface) }
+.cell:focus-visible { outline: 2px solid color-mix(in oklab, var(--md-sys-color-primary) 60%, transparent); outline-offset: 2px }
+.cell:not(.revealed):hover { transform: translateY(-2px); box-shadow: var(--md-sys-elevation-1) }
+.cell.revealed:hover { transform: none; box-shadow: none; cursor: default }
+
+.status { margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; color: var(--md-sys-color-on-surface-variant); font-weight: 500 }
+
+@keyframes scoreChange { 0% { transform: scale(1) } 30% { transform: scale(1.16) } 100% { transform: scale(1) } }
+#score { display: inline-block; transition: color 300ms ease }
+#score.score-changed { animation: scoreChange 450ms cubic-bezier(0.34, 1.56, 0.64, 1) }
+
+@media (prefers-reduced-motion: reduce) { #score.score-changed { animation: none } .cell { transition: none !important; transform: none !important } }
+
+.app-title { font-size: 1.375rem; margin-bottom: 1rem; font-weight: 700; color: var(--md-sys-color-on-surface) }

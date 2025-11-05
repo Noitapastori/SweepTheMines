@@ -1,0 +1,35 @@
+# Node / Vite / React
+node_modules/
+.DS_Store
+Thumbs.db
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Builds
+/dist/
+/build/
+/.vite/
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Editor/OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*.log
+
+# Coverage
+coverage/
+
+# Misc
+*.local
+**/.cache/
+**/.parcel-cache/
+
+
