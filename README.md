@@ -6,12 +6,6 @@ Simple mine sweeper with cursor.
 
 This repo now contains a small React example app (Vite) that replaces the original static demo.
 
-Quick start (PowerShell):
-```powershell
-cd C:\Users\panup\Documents\ensimmainen-sovellus
-npm install
-npm run dev
-# open http://localhost:5173
 ```
 
 Notes:
