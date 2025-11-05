@@ -1,6 +1,9 @@
 import React from 'react'
 import useMinesweeper from './lib/useMinesweeper'
 
+// Presentational cell component
+// UX: Each cell visual state (revealed, mine, flag) is expressed via CSS classes
+// that map to the MD3 tokens in styles. Props are primitive for reliable memoization.
 const Cell = React.memo(function Cell({ r, c, revealed, flag, isMine, adj }) {
   const classes = ['cell']
   if (revealed) classes.push('revealed')
@@ -21,8 +24,10 @@ const Cell = React.memo(function Cell({ r, c, revealed, flag, isMine, adj }) {
 })
 
 function Board({ grid, onReveal, onFlag, cols }) {
+  // Flatten 2D grid for rendering; re-computes only when grid changes
   const cells = React.useMemo(() => grid.flat(), [grid])
 
+  // Keyboard: arrows move focus; Enter/Space reveal; F toggles flag
   const handleKeyDown = React.useCallback((e) => {
     const focused = document.activeElement
     if (!focused || !focused.dataset.row || !focused.dataset.col) return
@@ -72,6 +77,7 @@ function Board({ grid, onReveal, onFlag, cols }) {
     }
   }, [grid.length, cols, onReveal, onFlag])
 
+  // Click to reveal (event delegation on board)
   const handleClick = React.useCallback((e) => {
     const target = e.target.closest('.cell')
     if (!target) return
@@ -80,6 +86,7 @@ function Board({ grid, onReveal, onFlag, cols }) {
     onReveal(r, c)
   }, [onReveal])
 
+  // Right-click to flag
   const handleContextMenu = React.useCallback((e) => {
     const target = e.target.closest('.cell')
     if (!target) return
@@ -116,16 +123,45 @@ function Board({ grid, onReveal, onFlag, cols }) {
 }
 
 export default function App() {
-  const { grid, revealCell, toggleFlagAt, newGame, rows, cols, mines, message, mineCount } = useMinesweeper({ rows:10, cols:10, mines:10 })
+  const { grid, revealCell, toggleFlagAt, newGame, setOptions, rows, cols, mines, message, mineCount, generated, gameOver } = useMinesweeper({ rows:10, cols:10, mines:10 })
   const [score, setScore] = React.useState(0)
+
+  // Difficulty selection state for UI highlighting
+  const [selectedDifficulty, setSelectedDifficulty] = React.useState('Custom')
+
+  // Sound toggle
+  const [soundEnabled, setSoundEnabled] = React.useState(true)
+
+  // Timer
+  const [startTime, setStartTime] = React.useState(null)
+  const [elapsedMs, setElapsedMs] = React.useState(0)
+
+  // Refs for effects
+  const panelRef = React.useRef(null)
+  const confettiRef = React.useRef(null)
+
+  // Best time persistence per difficulty key
+  const difficultyKey = `${rows}x${cols}-${mines}`
+  const [bestMs, setBestMs] = React.useState(() => {
+    const v = localStorage.getItem(`best-${difficultyKey}`)
+    return v ? parseInt(v) : null
+  })
+
+  React.useEffect(() => {
+    // Update best key when difficulty changes
+    const v = localStorage.getItem(`best-${difficultyKey}`)
+    setBestMs(v ? parseInt(v) : null)
+  }, [difficultyKey])
 
   // Reset score when starting new game
   const handleNewGame = React.useCallback(() => {
     setScore(0)
+    setElapsedMs(0)
+    setStartTime(null)
     newGame()
   }, [newGame])
 
-  // Add keyboard shortcut for new game
+  // Add keyboard shortcut for new game (R)
   React.useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.altKey && !e.metaKey) {
@@ -137,8 +173,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleNewGame])
 
-  // Simple Web Audio click sound: lightweight, no asset files required.
-  // We create a shared AudioContext and play a short oscillator envelope on reveal.
+  // Lightweight Web Audio feedback: short tones give immediate response to actions
   const audioCtxRef = React.useRef(null)
   function ensureAudio() {
     if (!audioCtxRef.current) {
@@ -154,6 +189,7 @@ export default function App() {
   }
 
   function playClickSound() {
+    if (!soundEnabled) return
     const ctx = ensureAudio()
     if (!ctx) return
     if (ctx.state === 'suspended') {
@@ -175,6 +211,7 @@ export default function App() {
   }
 
   function playMineSound() {
+    if (!soundEnabled) return
     const ctx = ensureAudio()
     if (!ctx) return
     if (ctx.state === 'suspended') {
@@ -210,13 +247,18 @@ export default function App() {
     o2.stop(now + 0.3)
   }
 
-  // Wrap the reveal handler so we play sound then reveal. This ensures both
-  // mouse and keyboard reveals trigger the audio.
+  // Play audio + animate score on safe reveal, boom on mine; then update state
   const handleReveal = React.useCallback((r, c) => {
     try {
       const cell = grid[r][c]
       if (cell.isMine) {
         playMineSound()
+        // Shake the panel briefly
+        const el = document.querySelector('.panel')
+        if (el) {
+          el.classList.add('shake')
+          setTimeout(() => el.classList.remove('shake'), 320)
+        }
       } else {
         playClickSound()
         // Increment score and trigger animation
@@ -225,19 +267,89 @@ export default function App() {
         if (scoreEl) {
           scoreEl.classList.add('score-changed')
         }
+        // Start timer on first safe reveal
+        if (!generated && !startTime) {
+          setStartTime(performance.now())
+        }
       }
     } catch (e) { /* ignore audio errors */ }
     revealCell(r, c)
-  }, [revealCell, grid])
+  }, [revealCell, grid, generated, startTime])
+
+  // Timer ticking while playing
+  React.useEffect(() => {
+    if (message === 'Playing' && startTime) {
+      const id = setInterval(() => setElapsedMs(performance.now() - startTime), 100)
+      return () => clearInterval(id)
+    }
+  }, [message, startTime])
+
+  // On win: stop timer, store best time, and launch confetti
+  React.useEffect(() => {
+    if (message === 'You Win!') {
+      if (startTime) setElapsedMs(prev => performance.now() - startTime)
+      const finalMs = startTime ? performance.now() - startTime : elapsedMs
+      const prevBest = bestMs ?? Infinity
+      if (finalMs < prevBest) {
+        localStorage.setItem(`best-${difficultyKey}`, String(finalMs))
+        setBestMs(finalMs)
+      }
+      launchConfetti()
+    }
+  }, [message])
+
+  function launchConfetti() {
+    const container = document.createElement('div')
+    container.className = 'confetti-container'
+    document.body.appendChild(container)
+    const colors = ['#F44336','#E91E63','#9C27B0','#3F51B5','#03A9F4','#4CAF50','#FFC107']
+    for (let i=0;i<80;i++){
+      const piece = document.createElement('div')
+      piece.className = 'confetti-piece'
+      const left = Math.random() * 100
+      piece.style.left = left + 'vw'
+      piece.style.background = colors[i % colors.length]
+      piece.style.animationDuration = (900 + Math.random()*700) + 'ms'
+      container.appendChild(piece)
+    }
+    setTimeout(() => container.remove(), 1800)
+  }
+
+  // Difficulty presets
+  const setDifficulty = (r,c,m,label) => {
+    setElapsedMs(0); setStartTime(null); setScore(0)
+    setSelectedDifficulty(label)
+    setOptions({ rows:r, cols:c, mines:m })
+  }
+
+  const elapsedSec = (elapsedMs/1000).toFixed(1)
+  const bestSec = bestMs != null ? (bestMs/1000).toFixed(1) : null
 
   return (
-    <div className="panel md3-surface md3-elevation-2">
+    <div className="panel md3-surface md3-elevation-2" ref={panelRef}>
       <h1 className="app-title">Sweep The Mines</h1>
       <div id="controls">
         <button id="resetBtn" className="md3-button md3-button--filled" onClick={handleNewGame}>
           <span className="state-layer" />
           New Game
         </button>
+        <button className={`md3-button md3-button--filled ${selectedDifficulty==='Easy'?'is-selected':''}`} onClick={() => setDifficulty(9,9,10,'Easy')} aria-pressed={selectedDifficulty==='Easy'}>
+          <span className="state-layer" />
+          Easy
+        </button>
+        <button className={`md3-button md3-button--filled ${selectedDifficulty==='Medium'?'is-selected':''}`} onClick={() => setDifficulty(16,16,40,'Medium')} aria-pressed={selectedDifficulty==='Medium'}>
+          <span className="state-layer" />
+          Medium
+        </button>
+        <button className={`md3-button md3-button--filled ${selectedDifficulty==='Hard'?'is-selected':''}`} onClick={() => setDifficulty(16,30,99,'Hard')} aria-pressed={selectedDifficulty==='Hard'}>
+          <span className="state-layer" />
+          Hard
+        </button>
+        <label className="md3-switch" aria-label="Sound">
+          <input type="checkbox" checked={soundEnabled} onChange={() => setSoundEnabled(s => !s)} role="switch" aria-checked={soundEnabled} />
+          <span className="track"><span className="thumb"></span></span>
+          <span className="switch-text">{soundEnabled ? 'Sound On' : 'Sound Off'}</span>
+        </label>
       </div>
 
       <Board grid={grid} onReveal={handleReveal} onFlag={toggleFlagAt} cols={cols} />
@@ -257,6 +369,7 @@ export default function App() {
         </span>
         <span id="message" aria-live="polite">{message}</span>
         <span id="mineCount" aria-live="polite">Mines: {mineCount}</span>
+        <span aria-live="polite">Time: {elapsedSec}s{bestSec ? ` (best ${bestSec}s)` : ''}</span>
       </div>
     </div>
   )

@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useReducer } from 'react'
 
+// Game state management for Minesweeper
+// UX glossary:
+// - grid: 2D array of cells (each has: row/col, isMine, revealed, flag, adj)
+// - adj: number of adjacent mines; -1 denotes a mine
+// - message: high-level status (Ready / Playing / You Win! / Game Over)
+
+// Create a new empty grid of cells (all hidden, no mines yet)
 function createEmptyGrid(rows, cols) {
   const g = []
   for (let r=0;r<rows;r++){
@@ -10,6 +17,7 @@ function createEmptyGrid(rows, cols) {
   return g
 }
 
+// Randomly place mines, avoiding the first revealed cell
 function placeMines(grid, mines, firstR, firstC, rng=Math.random) {
   const rows = grid.length, cols = grid[0].length
   let toPlace = mines
@@ -23,6 +31,7 @@ function placeMines(grid, mines, firstR, firstC, rng=Math.random) {
   }
 }
 
+// Compute adjacent mine counts for every non-mine cell
 function computeAdjacency(grid){
   const rows = grid.length, cols = grid[0].length
   const dirs = [-1,0,1]
@@ -36,6 +45,7 @@ function computeAdjacency(grid){
   }
 }
 
+// Reveal cells using an iterative flood-fill for zero-adjacent areas
 function revealIterative(grid, startR, startC) {
   const rows = grid.length, cols = grid[0].length
   const stack = [grid[startR][startC]]
@@ -51,16 +61,38 @@ function revealIterative(grid, startR, startC) {
   }
 }
 
-const initial = (opts) => ({
-  rows: opts.rows||10, cols: opts.cols||10, mines: opts.mines||15,
-  grid: createEmptyGrid(opts.rows||10, opts.cols||10),
-  generated: false, gameOver:false, flagsPlaced:0, message:'Ready', mineCount: opts.mines||15
-})
+// Mulberry32 PRNG for deterministic seeds
+function mulberry32(seed) {
+  let t = seed >>> 0
+  return function() {
+    t += 0x6D2B79F5
+    let r = Math.imul(t ^ (t >>> 15), 1 | t)
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r)
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296
+  }
+}
 
+// Initial state factory based on options (rows/cols/mines)
+const initial = (opts) => {
+  const rows = opts.rows||10
+  const cols = opts.cols||10
+  const mines = opts.mines||15
+  const seed = typeof opts.seed === 'number' ? opts.seed : undefined
+  const rng = seed !== undefined ? mulberry32(seed) : Math.random
+  return {
+    rows, cols, mines,
+    grid: createEmptyGrid(rows, cols),
+    generated: false, gameOver:false, flagsPlaced:0, message:'Ready', mineCount: mines,
+    seed, rng
+  }
+}
+
+// Pure reducer: applies game actions and returns next state
 function reducer(state, action){
   switch(action.type){
     case 'reset': {
-      const opts = action.opts || { rows: state.rows, cols: state.cols, mines: state.mines }
+      // Reset grid and counters to a fresh game with same (or provided) options
+      const opts = action.opts || { rows: state.rows, cols: state.cols, mines: state.mines, seed: state.seed }
       return initial(opts)
     }
     case 'setOptions': {
@@ -68,17 +100,19 @@ function reducer(state, action){
       return { ...initial(opts) }
     }
     case 'generate': {
+      // First reveal triggers mine placement away from the clicked cell
       const { firstR, firstC, rng } = action
       const grid = state.grid.map(row => row.map(c=> ({...c})))
-      placeMines(grid, state.mines, firstR, firstC, rng)
+      placeMines(grid, state.mines, firstR, firstC, rng || state.rng)
       computeAdjacency(grid)
       return { ...state, grid, generated:true }
     }
     case 'reveal': {
+      // Reveal a cell; flood-fill zero-adjacent areas; update win/lose state
       const { r,c } = action
       if (state.gameOver) return state
       const grid = state.grid.map(row => row.map(c=> ({...c})))
-      if (!state.generated){ placeMines(grid, state.mines, r,c); computeAdjacency(grid) }
+      if (!state.generated){ placeMines(grid, state.mines, r,c, state.rng); computeAdjacency(grid) }
       revealIterative(grid, r, c)
       // check mines hit
       let gameOver=false
@@ -93,6 +127,7 @@ function reducer(state, action){
       return newState
     }
     case 'toggleFlag': {
+      // Toggle a flag on a covered cell; update remaining mine count; check win
       const { r,c } = action
       if (state.gameOver) return state
       const grid = state.grid.map(row => row.map(c=> ({...c})))
@@ -129,6 +164,8 @@ export default function useMinesweeper(opts){
     cols: state.cols,
     mines: state.mines,
     message: state.message,
-    mineCount: state.mineCount
+    mineCount: state.mineCount,
+    generated: state.generated,
+    gameOver: state.gameOver
   }
 }

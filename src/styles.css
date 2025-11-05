@@ -1,3 +1,8 @@
+/*
+  Material Design 3 theme tokens and game layout variables
+  - UX focus: These values define the look-and-feel across the app.
+  - Designers can tweak colors, elevations, and shape here to theme the product.
+*/
 :root {
     /* Game layout */
     --cell-size: 2rem;
@@ -20,6 +25,7 @@
     --md-state-focus: 0.12;
     --md-state-pressed: 0.12;
 }
+/* Dark theme palette (auto-applied if user prefers dark mode) */
 @media (prefers-color-scheme: dark) {
     :root {
         --md-sys-color-primary: #D0BCFF;
@@ -33,31 +39,51 @@
         --md-sys-color-on-error: #601410;
     }
 }
+/* Global reset and base layout */
 * { margin:0; padding:0; box-sizing:border-box }
 html,body { height:100% }
 body { font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface) }
 
-/* MD3 surface/panel */
+/* Primary surface container for the game area */
 .panel { background: var(--md-sys-color-surface); padding:2rem; border-radius: var(--md-sys-shape-medium); box-shadow: var(--md-sys-elevation-2); text-align:center }
 .md3-surface { background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface) }
 .md3-elevation-1 { box-shadow: var(--md-sys-elevation-1) }
 .md3-elevation-2 { box-shadow: var(--md-sys-elevation-2) }
 .md3-elevation-3 { box-shadow: var(--md-sys-elevation-3) }
 
+/* Controls bar: hosts primary actions like New Game */
 #controls { display:flex; gap:0.75rem; align-items:center; justify-content:center; margin-bottom:1rem }
 
-/* MD3 Filled Button */
+/* MD3 Filled Button
+   - State layer provides hover/press visual per MD3 spec.
+*/
 .md3-button { position: relative; display:inline-flex; align-items:center; justify-content:center; height:40px; padding:0 24px; border-radius: 20px; border:none; cursor:pointer; font-weight:600; font-size:14px; line-height:20px; letter-spacing:0.1px; transition: box-shadow 120ms ease, transform 120ms ease }
 .md3-button--filled { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary) }
 .md3-button .state-layer { position:absolute; inset:0; border-radius:inherit; background: currentColor; opacity:0; pointer-events:none; transition: opacity 120ms ease }
 .md3-button:hover .state-layer { opacity: var(--md-state-hover) }
 .md3-button:active .state-layer { opacity: var(--md-state-pressed) }
 .md3-button:focus-visible { outline: 2px solid color-mix(in oklab, var(--md-sys-color-primary) 60%, transparent); outline-offset: 2px }
+.md3-button.is-selected { outline: 3px solid color-mix(in oklab, var(--md-sys-color-primary) 55%, transparent); outline-offset: 2px; box-shadow: var(--md-sys-elevation-2) }
 
-/* Board */
+/* MD3 Switch (Sound toggle) */
+.md3-switch { display:inline-flex; align-items:center; gap:8px; cursor:pointer; user-select:none; position: relative }
+.md3-switch input { position:absolute; opacity:0; width:0; height:0 }
+.md3-switch .track { position: relative; width:52px; height:32px; border-radius:16px; background: var(--md-sys-color-surface-variant); border: 1px solid var(--md-sys-color-outline); transition: background-color 160ms ease, border-color 160ms ease }
+.md3-switch .track .thumb { position: absolute; top:50%; left:6px; width:20px; height:20px; border-radius:50%; background: var(--md-sys-color-on-surface); transform: translate(0, -50%); transition: left 160ms cubic-bezier(.2,.9,.2,1), background-color 160ms ease }
+.md3-switch .switch-text { font-size: 0.9rem; color: var(--md-sys-color-on-surface-variant) }
+.md3-switch input:focus-visible + .track { outline: 2px solid color-mix(in oklab, var(--md-sys-color-primary) 60%, transparent); outline-offset: 2px }
+.md3-switch input:checked + .track { background: color-mix(in oklab, var(--md-sys-color-primary) 35%, var(--md-sys-color-surface-variant)); border-color: color-mix(in oklab, var(--md-sys-color-primary) 60%, var(--md-sys-color-outline)) }
+.md3-switch input:checked + .track .thumb { left:26px; background: var(--md-sys-color-on-primary) }
+.md3-button.is-selected { box-shadow: var(--md-sys-elevation-3); outline: 2px solid color-mix(in oklab, var(--md-sys-color-primary) 50%, transparent); outline-offset: 2px }
+.md3-button--filled.is-selected { filter: brightness(1.06) }
+
+/* Board grid: number of columns is controlled via the CSS variable --cols */
 #board { display:grid; grid-template-columns: repeat(var(--cols), var(--cell-size)); gap:0.25rem; user-select:none }
 
-/* Cells (use surface-variant + outline for unrevealed, surface for revealed) */
+/* Cells
+   - Unrevealed: surface-variant with outline (subtle) per MD3
+   - Revealed: surface, no outline; mines and flags use semantic colors
+*/
 .cell { width:var(--cell-size); height:var(--cell-size); border-radius: 8px; display:flex; align-items:center; justify-content:center; font-weight:600; cursor:pointer; background: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); border: 1px solid var(--md-sys-color-outline); transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease, filter 120ms ease }
 .cell.revealed { background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); border-color: transparent; cursor:default }
 .cell.mine { background: color-mix(in oklab, var(--md-sys-color-error) 15%, transparent); color: var(--md-sys-color-error) }
@@ -66,12 +92,30 @@ body { font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; display:fl
 .cell:not(.revealed):hover { transform: translateY(-2px); box-shadow: var(--md-sys-elevation-1) }
 .cell.revealed:hover { transform: none; box-shadow: none; cursor: default }
 
+/* Status row: score, message, remaining mines */
 .status { margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; color: var(--md-sys-color-on-surface-variant); font-weight: 500 }
 
+/* Subtle score pop animation for feedback on successful reveals */
 @keyframes scoreChange { 0% { transform: scale(1) } 30% { transform: scale(1.16) } 100% { transform: scale(1) } }
 #score { display: inline-block; transition: color 300ms ease }
 #score.score-changed { animation: scoreChange 450ms cubic-bezier(0.34, 1.56, 0.64, 1) }
 
 @media (prefers-reduced-motion: reduce) { #score.score-changed { animation: none } .cell { transition: none !important; transform: none !important } }
 
+/* Title styling */
 .app-title { font-size: 1.375rem; margin-bottom: 1rem; font-weight: 700; color: var(--md-sys-color-on-surface) }
+
+/* Mine shake animation applied to the panel when a mine is revealed */
+@keyframes shake {
+  0%, 100% { transform: translateX(0) }
+  20% { transform: translateX(-4px) }
+  40% { transform: translateX(4px) }
+  60% { transform: translateX(-3px) }
+  80% { transform: translateX(3px) }
+}
+.shake { animation: shake 300ms ease }
+
+/* Confetti pieces for win feedback */
+.confetti-container { position: fixed; inset: 0; pointer-events: none; overflow: hidden }
+.confetti-piece { position: absolute; top: -10px; width: 8px; height: 12px; opacity: 0.9; border-radius: 2px; animation: fall 1200ms linear forwards }
+@keyframes fall { to { transform: translateY(110vh) rotate(360deg) } }
