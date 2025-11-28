@@ -9,6 +9,8 @@ const imgEquipmentSlot = "http://localhost:3845/assets/69467539b3c72783dfaba86b6
 const imgEquipmentSlot1 = "http://localhost:3845/assets/cc40e82fb0761e20f1de48669422c02c661737a2.png";
 const imgEquipmentSlot2 = "http://localhost:3845/assets/f508fec2b6fd01dc338001ba9460fd0f9f0705d2.png";
 const imgCharacterImage = "http://localhost:3845/assets/afe5cfb23d1e8aaf93e04c038fdb076686c7e1b1.png";
+const imgHealthPotion = "http://localhost:3845/assets/507cdddc6f87f55cf36dcfa919b1ad01af10179b.png";
+const imgManaPotion = "http://localhost:3845/assets/05a73396406976801a80277ac355c6f6da3ba3d9.png";
 
 // Equipment slot definitions
 const EQUIPMENT_SLOTS = [
@@ -72,6 +74,38 @@ const ITEMS = {
       'Magic +5',
     ]
   },
+  '4': {
+    id: '4',
+    name: 'Health Potion',
+    displayName: 'Health Potion',
+    image: imgHealthPotion,
+    attributes: {
+      strength: 0,
+      dexterity: 0,
+      vitality: 0,
+      magic: 0,
+    },
+    properties: [
+      'Restores 50 HP',
+      'Single use',
+    ]
+  },
+  '5': {
+    id: '5',
+    name: 'Mana Potion',
+    displayName: 'Mana Potion',
+    image: imgManaPotion,
+    attributes: {
+      strength: 0,
+      dexterity: 0,
+      vitality: 0,
+      magic: 0,
+    },
+    properties: [
+      'Restores 50 MP',
+      'Single use',
+    ]
+  },
 };
 
 // Base attribute values
@@ -84,7 +118,11 @@ const BASE_ATTRIBUTES = {
 
 export default function GameUI() {
   const [inventory, setInventory] = React.useState(
-    Array(20).fill(null)
+    Array(20).fill(null).map((_, i) => {
+      if (i === 0) return { ...ITEMS['4'], quantity: 4 }; // Health Potion x4
+      if (i === 1) return { ...ITEMS['5'], quantity: 5 }; // Mana Potion x5
+      return null;
+    })
   );
 
   const [equipment, setEquipment] = React.useState({
@@ -263,7 +301,11 @@ export default function GameUI() {
                         cursor: item ? 'grab' : 'default',
                       }}
                       title={item ? item.name : 'Empty slot'}
-                    />
+                    >
+                      {item && item.quantity && (
+                        <div className="inventory-slot-quantity">{item.quantity}</div>
+                      )}
+                    </div>
                   );
                 })}
               </div>

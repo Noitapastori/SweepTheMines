@@ -239,6 +239,7 @@ button:focus, #resetBtn:focus {
     background-position: center;
     transition: all 160ms ease;
     cursor: default;
+    position: relative;
 }
 
 .inventory-slot.filled {
@@ -259,6 +260,18 @@ button:focus, #resetBtn:focus {
     border-color: #ffffff;
     transform: scale(1.05);
     box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+}
+
+.inventory-slot-quantity {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    font-family: 'Jacquard 24', serif;
+    font-size: 24px;
+    font-weight: 400;
+    color: white;
+    pointer-events: none;
+    z-index: 10;
 }
 
 /* Equipment Panel */
