@@ -174,9 +174,31 @@ button:focus, #resetBtn:focus {
     height: 100%;
     background: #3a3a3a;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 96px 32px;
+    position: relative;
+}
+
+.start-battle-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 12px 24px;
+    background: #ff4444;
+    color: white;
+    border: 2px solid white;
+    font-family: 'Jacquard 24', serif;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 160ms ease;
+}
+
+.start-battle-btn:hover {
+    background: #ff6666;
+    transform: scale(1.05);
 }
 
 .game-ui-container {
@@ -468,5 +490,257 @@ button:focus, #resetBtn:focus {
     color: #dadada;
     text-align: center;
     line-height: 1.4;
+}
+
+/* ===== Battle Screen Styles ===== */
+.battle-screen {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+    background: #3a3a3a;
+    padding: 24px;
+    font-family: 'Jacquard 24', serif;
+    position: relative;
+}
+
+.battle-arena {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 1000px;
+    gap: 64px;
+    flex: 1;
+}
+
+.battle-participant {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.battle-participant.player {
+    align-items: flex-start;
+}
+
+.battle-participant.enemy {
+    align-items: flex-end;
+}
+
+.character-image {
+    width: 300px;
+    height: 400px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.character-image.enemy-image {
+    width: 350px;
+    height: 400px;
+}
+
+.stats-display {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 200px;
+}
+
+.stat-display {
+    background: #1a1a1a;
+    border: 2px solid #444;
+    padding: 12px 16px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 40px;
+}
+
+.stat-display.hp-display .stat-value {
+    color: #f30000;
+}
+
+.stat-display.mp-display .stat-value {
+    color: #0800ff;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: bold;
+    font-family: 'Jacquard 24', serif;
+}
+
+.enemy-hp-box {
+    background: #1a1a1a;
+    border: 2px solid #444;
+    padding: 12px 16px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 150px;
+    margin-top: 8px;
+}
+
+.enemy-hp {
+    color: #f30000;
+    font-size: 28px;
+    font-weight: bold;
+    font-family: 'Jacquard 24', serif;
+}
+
+.action-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 900px;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+}
+
+.action-btn {
+    background: #000000;
+    color: #ffffff;
+    border: 2px solid #333;
+    padding: 12px 24px;
+    font-size: 20px;
+    font-family: 'Jacquard 24', serif;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    min-width: 100px;
+}
+
+.action-btn:hover:not(:disabled) {
+    background: #222;
+    border-color: #555;
+    transform: scale(1.05);
+}
+
+.action-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.action-btn.attack-btn {
+    color: #ffffff;
+}
+
+.action-btn.defend-btn {
+    color: #ffffff;
+}
+
+.potions-row {
+    display: flex;
+    gap: 12px;
+    margin-left: 16px;
+    border-left: 2px solid #444;
+    padding-left: 16px;
+}
+
+.potion-slot {
+    width: 80px;
+    height: 80px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 2px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.potion-slot:hover:not(:disabled) {
+    border-color: #666;
+    background-color: rgba(0, 0, 0, 0.4);
+    transform: scale(1.05);
+}
+
+.potion-slot:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.potion-quantity {
+    background: rgba(0, 0, 0, 0.8);
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 2px;
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    font-family: 'Jacquard 24', serif;
+}
+
+.turn-indicator {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #f6ff00;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-size: 20px;
+    font-weight: bold;
+    font-family: 'Jacquard 24', serif;
+    border: 2px solid #f6ff00;
+}
+
+.battle-over-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.battle-over-modal {
+    background: #1a1a1a;
+    border: 3px solid #f6ff00;
+    padding: 32px;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 400px;
+}
+
+.battle-result-title {
+    font-size: 36px;
+    color: #f6ff00;
+    margin-bottom: 16px;
+    font-family: 'Jacquard 24', serif;
+}
+
+.battle-result-text {
+    font-size: 20px;
+    color: #dadada;
+    margin-bottom: 24px;
+    font-family: 'Jacquard 24', serif;
+}
+
+.battle-over-modal .action-btn {
+    width: 100%;
+    min-width: unset;
 }
 

@@ -116,7 +116,7 @@ const BASE_ATTRIBUTES = {
   magic: 10,
 };
 
-export default function GameUI() {
+export default function GameUI({ onStartBattle }) {
   const [inventory, setInventory] = React.useState(
     Array(20).fill(null).map((_, i) => {
       if (i === 0) return { ...ITEMS['4'], quantity: 4 }; // Health Potion x4
@@ -275,6 +275,7 @@ export default function GameUI() {
 
   return (
     <div className="game-ui">
+      <button className="start-battle-btn" onClick={onStartBattle}>⚔ START BATTLE</button>
       <div className="game-ui-container">
         {/* Inventory Panel */}
         <div className="panel inventory-panel">
