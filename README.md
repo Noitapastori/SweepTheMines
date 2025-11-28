@@ -1,21 +1,34 @@
 # SweepTheMines
 
-Simple Minesweeper built with React (Vite) and styled using Material Design 3 (MD3).
+RPG inventory and equipment management system built with React (Vite). Features drag-and-drop item management, character attributes with equipment bonuses, and interactive item tooltips.
 
 ## Scripts
 - `npm run dev` – start dev server
 - `npm run build` – production build
 - `npm run preview` – preview build
 
-## UX overview
-- Theme: MD3 tokens in `src/styles.css` (`--md-sys-color-*`, elevation, shapes). Tweak here to rebrand.
-- Layout: Board is a CSS grid; `--cols` sets column count, `--cell-size` sets tile size.
-- Interactions:
-  - Click reveals; right-click flags; keyboard: arrows move focus, Enter/Space reveal, F flag, R new game.
-  - Unrevealed = surface-variant + outline; revealed = surface.
-- Feedback: Web Audio tones (safe vs mine). Score label pops briefly on safe reveals.
+## Features
+- **Inventory System**: 20-slot inventory grid for storing items
+- **Equipment Slots**: 8 equipment slots (weapon, off-hand, armor, 4 accessories, shield)
+- **Drag & Drop**: Drag items between inventory and equipment, swap items within slots
+- **Item Attributes**: Equipment provides stat bonuses (Strength, Dexterity, Vitality, Magic)
+- **Character Stats**: Real-time stat calculation showing base values and bonuses
+- **Item Tooltips**: Hover over items to see properties and attribute bonuses
+- **Visual Feedback**: Equipment bonuses displayed in green, hover effects on slots
+
+## Item Database
+- **Sword**: +5 Strength (Attack power 15-20)
+- **Armor**: +5 Vitality (Defense 12)
+- **Shield**: +5 Magic (Magic Defense 10)
 
 ## Architecture
-- `src/lib/useMinesweeper.js`: reducer-based game state (grid generation, adjacency, flood-fill reveal, win/lose).
-- `src/App.jsx`: renders board and controls; delegates events at board level; memoized cells for performance.
-- `src/styles.css`: MD3 color tokens, elevations, shapes, dark mode, and component styles.
+- `src/components/GameUI.jsx`: Main RPG UI component with state management for inventory, equipment, and drag-drop
+- `src/App.jsx`: Entry point, renders GameUI component
+- `src/styles.css`: Styling using Jacquard 24 font, custom CSS variables, and Figma design tokens
+
+## UX Details
+- Inventory slots show item preview with grab cursor
+- Equipment slots highlight in cyan when equipped, green on hover of equipped items
+- Empty slots show 30% opacity
+- Item tooltips appear on hover with yellow title and gray properties
+- Dragging shows grabbing cursor with reduced opacity for visual feedback
