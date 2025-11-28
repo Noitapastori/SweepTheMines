@@ -1,4 +1,4 @@
-# SweepTheMines
+# RPG Inventory
 
 RPG inventory and equipment management system built with React (Vite). Features drag-and-drop item management, character attributes with equipment bonuses, and interactive item tooltips.
 
